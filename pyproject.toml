@@ -1,0 +1,179 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "azure-copilot"
+version = "0.1.0"
+description = "Natural language interface for Azure CLI - manage Azure resources using plain English"
+readme = "README.md"
+requires-python = ">=3.13"
+license = "MIT"
+authors = [
+    {name = "Azure Copilot Team"}
+]
+keywords = ["azure", "cli", "natural-language", "cloud", "devops"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: System Administrators",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: System :: Systems Administration",
+    "Topic :: Utilities",
+]
+
+# Core dependencies for production use
+dependencies = [
+    "click>=8.1.0",           # CLI framework
+    "rich>=13.0.0",           # Terminal formatting and tables
+    "azure-identity>=1.15.0", # Azure authentication
+    "azure-mgmt-resource>=23.0.0",  # Resource group management
+    "azure-mgmt-compute>=30.0.0",   # VM management
+    "azure-mgmt-storage>=21.0.0",   # Storage account management
+    "azure-mgmt-network>=25.0.0",   # Virtual network management
+    "python-dotenv>=1.0.0",   # Environment variable loading
+]
+
+[project.optional-dependencies]
+# Development dependencies (linting, formatting, type checking)
+dev = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-cov>=4.1.0",
+    "pytest-mock>=3.12.0",
+    "ruff>=0.1.0",            # Fast Python linter
+    "black>=23.0.0",          # Code formatter
+    "mypy>=1.7.0",            # Type checker
+    "pre-commit>=3.5.0",      # Git hooks
+]
+
+# Week 3+ dependencies for LLM integration (not needed yet)
+llm = [
+    "openai>=1.0.0",          # Azure OpenAI SDK
+    "tiktoken>=0.5.0",        # Token counting for GPT models
+]
+
+# Week 5+ dependencies for RAG (not needed yet)
+rag = [
+    "langchain>=0.1.0",
+    "chromadb>=0.4.0",
+    "sentence-transformers>=2.2.0",
+]
+
+# Install everything for full development
+all = [
+    "azure-copilot[dev,llm,rag]"
+]
+
+[project.scripts]
+# Makes 'copilot' command available after pip install
+copilot = "cli:cli"
+azure-copilot = "cli:cli"
+
+[project.urls]
+Homepage = "https://github.com/yourusername/azure-copilot"
+Documentation = "https://github.com/yourusername/azure-copilot/blob/main/README.md"
+Repository = "https://github.com/yourusername/azure-copilot"
+Issues = "https://github.com/yourusername/azure-copilot/issues"
+
+# Tool configurations below
+
+[tool.setuptools]
+py-modules = ["cli", "azure_commands", "config"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"
+addopts = [
+    "--verbose",
+    "--cov=.",
+    "--cov-report=html",
+    "--cov-report=term-missing",
+    "--cov-fail-under=80",  # Enforce 80% coverage
+]
+asyncio_mode = "auto"
+
+[tool.coverage.run]
+source = ["."]
+omit = [
+    "tests/*",
+    "venv/*",
+    "*__pycache__*",
+    "*.pyc",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+]
+
+[tool.black]
+line-length = 100
+target-version = ["py313"]
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "UP",  # pyupgrade
+    "ARG", # flake8-unused-arguments
+    "SIM", # flake8-simplify
+]
+ignore = [
+    "E501",  # line too long (handled by black)
+    "B008",  # do not perform function calls in argument defaults
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["ARG", "S101"]  # Allow unused args and asserts in tests
+
+[tool.mypy]
+python_version = "3.13"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+strict_equality = true
+
+[[tool.mypy.overrides]]
+module = "azure.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+disallow_untyped_defs = false
